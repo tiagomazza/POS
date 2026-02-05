@@ -27,9 +27,9 @@ else:
 listagem = pd.read_excel(uploaded_file, header=None, engine=engine)
 
 
-# Ajustar cabeçalho (supondo que os nomes das colunas estão na linha 5)
-listagem.columns = listagem.iloc[4].astype(str).values
-listagem = listagem.iloc[5:, :]
+# Ajustar cabeçalho (supondo que os nomes das colunas estão na linha 6)
+listagem.columns = listagem.iloc[5].astype(str).values
+listagem = listagem.iloc[6:, :]
 
 
 # Normalizar nomes de coluna
