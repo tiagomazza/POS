@@ -17,6 +17,9 @@ listagem = listagem.iloc[4:, :]  # remover as primeiras 4 linhas
 listagem.columns = listagem.iloc[0].astype(str).values  # usar primeira linha como colunas
 listagem = listagem.iloc[1:, :]  # remover a linha de cabeçalho duplicada
 
+st.write("Colunas atuais:")
+st.write(listagem.columns.tolist())
+
 # Filtrar apenas "Fatura" e "KENNA"
 mask_tipo = listagem["Descrição [Tipos de Documentos]"] == "Fatura"
 mask_familia = listagem["Família [Artigos]"] == "KENNA"
@@ -173,3 +176,4 @@ st.download_button(
     file_name="POS_pronta.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 )
+
