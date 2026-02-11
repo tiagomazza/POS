@@ -4,6 +4,9 @@ from io import BytesIO
 
 st.title("POS – KENNAMETAL")
 
+# =========================
+# 1. Upload e leitura base
+# =========================
 uploaded_file = st.file_uploader(
     "Carregar ficheiros *.xls ou *.xlsx",
     type=["xls", "xlsx"]
@@ -12,15 +15,13 @@ if uploaded_file is None:
     st.info("Por favor, carregue o ficheiro *.xls ou *.xlsx.")
     st.stop()
 
-if uploaded_file.name.endswith(".xls"):
-    engine = "xlrd"
-else:
-    engine = "openpyxl"
+engine = "xlrd" if uploaded_file.name.endswith(".xls") else "openpyxl"
 
 listagem = pd.read_excel(uploaded_file, header=None, engine=engine)
 listagem.columns = listagem.iloc[5].astype(str).values
 listagem = listagem.iloc[6:, :]
 
+# normalizar nomes de coluna
 listagem.columns = (
     listagem.columns
     .astype(str)
@@ -28,16 +29,20 @@ listagem.columns = (
     .str.replace("  ", " ")
 )
 
+# =========================
+# 2. Filtros base (Fatura / KENNA) e limpeza
+# =========================
 listagem = listagem[listagem["Descrição [Tipos de Documentos]"] == "Fatura"].copy()
 listagem = listagem.drop(columns=["Descrição [Tipos de Documentos]"], errors="ignore")
 listagem = listagem[listagem["Família [Artigos]"] == "KENNA"].copy()
 listagem = listagem.dropna(axis=1, how="all")
 
-st.write("### 🧹listagem após limpeza")
+st.write("### 🧹 listagem após limpeza inicial (Fatura / KENNA)")
 st.dataframe(listagem)
 
-##REVENDA
-
+# =========================
+# 3. Remover clientes de revenda
+# =========================
 revenda = pd.read_excel("data/revenda.xlsx")
 revenda["revenda"] = revenda["revenda"].astype(str)
 listagem["Número [Clientes]"] = listagem["Número [Clientes]"].astype(str)
@@ -54,30 +59,32 @@ retirados_revenda = merged[merged["_merge"] == "both"].drop(
     columns=["revenda", "_merge"],
     errors="ignore"
 )
-
-st.write("### 🔎Revendas encontradas")
+st.write("### 🔎 Revendas encontradas")
 st.dataframe(retirados_revenda)
 
 listagem = merged[merged["_merge"] == "left_only"].drop(
     columns=["revenda", "_merge"],
     errors="ignore"
 )
-
-st.write("### 🟢listagem após remover clientes de revenda")
+st.write("### 🟢 listagem após remover clientes de revenda")
 st.dataframe(listagem)
 
+# =========================
+# 4. Identificar KITS na listagem
+# =========================
 df_kits = listagem[
     listagem["Descrição [Artigos]"]
-    .astype(str)              
+    .astype(str)
     .str.contains("KIT", case=False, na=False)
 ].copy()
-
-st.write("### 🔎Kits encontrados")
+st.write("### 🔎 Kits encontrados na listagem")
 st.dataframe(df_kits)
 
+# =========================
+# 5. Ler componentes dos kits e decompor
+# =========================
 componentes_dos_kits = pd.read_excel("data/componentes_kits.xlsx")
-
-st.write("### 🧩componentes dos kits")
+st.write("### 🧩 componentes dos kits (data/componentes_kits.xlsx)")
 st.dataframe(componentes_dos_kits)
 
 nome_coluna_abrev = "Abrev. [Artigos]"
@@ -96,6 +103,7 @@ for idx, row in listagem.iterrows():
     if len(idx_comp) > 0:
         for j in idx_comp:
             linha_comp = componentes_dos_kits.loc[j]
+            # colunas 2:21 em R -> índices 1 a 20 em pandas
             for col_idx in range(1, 21):
                 col_name = componentes_dos_kits.columns[col_idx]
                 novo_valor = str(linha_comp[col_name])
@@ -104,57 +112,51 @@ for idx, row in listagem.iterrows():
                     nova_linha[nome_coluna_abrev] = novo_valor
                     novas_linhas.append(nova_linha)
 
-
 if novas_linhas:
     df_componentes_kits = pd.concat(novas_linhas, axis=1).T.reset_index(drop=True)
 else:
     df_componentes_kits = pd.DataFrame(columns=listagem.columns)
 
+# limpar Abrev vazios
 df_componentes_kits["Abrev. [Artigos]"] = (
     df_componentes_kits["Abrev. [Artigos]"]
     .replace("nan", pd.NA)
-    .replace("nan", pd.NA)
 )
 df_componentes_kits = df_componentes_kits.dropna(subset=["Abrev. [Artigos]"])
-st.write("### 💥Kit decomposto")
+
+st.write("### 💥 Kits decompostos em componentes")
 st.dataframe(df_componentes_kits)
 
-kits_listagem = listagem[
-    listagem["Descrição [Artigos]"]
-    .astype(str)
-    .str.contains("KIT", case=False, na=False)
-].copy()
-
-kits_listagem["Artigo [Documentos GC Lin]"] = kits_listagem["Artigo [Documentos GC Lin]"].astype(str)
-componentes_dos_kits["codigo_aba"] = componentes_dos_kits["codigo_aba"].astype(str)
+# =========================
+# 6. Kits sem correspondência em componentes_dos_kits
+# =========================
+kits_listagem = df_kits.copy()
+kits_listagem[nome_coluna_artigo] = kits_listagem[nome_coluna_artigo].astype(str)
+componentes_dos_kits[nome_coluna_codigo] = componentes_dos_kits[nome_coluna_codigo].astype(str)
 
 kits_sem_corresp = kits_listagem.merge(
-    componentes_dos_kits[["codigo_aba"]],
-    left_on="Artigo [Documentos GC Lin]",
-    right_on="codigo_aba",
+    componentes_dos_kits[[nome_coluna_codigo]],
+    left_on=nome_coluna_artigo,
+    right_on=nome_coluna_codigo,
     how="left",
     indicator=True,
 )
 
 kits_sem_corresp = kits_sem_corresp[kits_sem_corresp["_merge"] == "left_only"].drop(
-    columns=["codigo_aba", "_merge"],
+    columns=[nome_coluna_codigo, "_merge"],
     errors="ignore"
 )
-
-st.write("### 💰adicionado preço de custo aos KITs")
-st.dataframe(df_componentes_kits)
-
-if not df_componentes_kits.empty:
-    listagem = pd.concat([listagem, df_componentes_kits], ignore_index=True)
-
-st.write("### ❌ Kits não encontrados")
+st.write("### ❌ Kits na listagem sem correspondência em componentes_kits")
 st.dataframe(kits_sem_corresp)
 
+# =========================
+# 7. Trazer preço de custo dos componentes dos kits
+# =========================
 preco_custo = pd.read_excel("data/preço_custo.xlsx")
 preco_custo["sap"] = preco_custo["sap"].astype(str)
 df_componentes_kits["Abrev. [Artigos]"] = df_componentes_kits["Abrev. [Artigos]"].astype(str)
 
-st.write("### 🧩preço de custo dos componentes dos kits")
+st.write("### 🧩 tabela de preço de custo (preço_custo.xlsx)")
 st.dataframe(preco_custo)
 
 df_componentes_kits = df_componentes_kits.merge(
@@ -164,6 +166,18 @@ df_componentes_kits = df_componentes_kits.merge(
     how="left",
 )
 
+df_componentes_kits["Úl.Pr.Cmp."] = df_componentes_kits["preço_custo"]
+df_componentes_kits = df_componentes_kits.drop(columns=["sap", "preço_custo"], errors="ignore")
+df_componentes_kits["Úl.Pr.Cmp."] = pd.to_numeric(
+    df_componentes_kits["Úl.Pr.Cmp."], errors="coerce"
+).fillna(0.0)
+
+st.write("### 💰 Componentes de kits com preço de custo")
+st.dataframe(df_componentes_kits)
+
+# =========================
+# 8. Remover linhas de KIT da listagem base e adicionar componentes
+# =========================
 mask_sem_kit_desc = (
     listagem["Descrição [Artigos]"].isna()
     | ~listagem["Descrição [Artigos]"].astype(str).str.contains("KIT", case=False, na=True)
@@ -175,26 +189,33 @@ mask_sem_kit_abrev = (
 
 listagem = listagem[mask_sem_kit_desc & mask_sem_kit_abrev].copy()
 
-st.write("### 🟢listagem após remover KIT")
+st.write("### 🟢 listagem após remover linhas de KIT")
 st.dataframe(listagem)
 
-df_componentes_kits["Úl.Pr.Cmp."] = df_componentes_kits["preço_custo"]
-df_componentes_kits = df_componentes_kits.drop(columns=["sap", "preço_custo"], errors="ignore")
-df_componentes_kits["Úl.Pr.Cmp."] = pd.to_numeric(df_componentes_kits["Úl.Pr.Cmp."], errors="coerce").fillna(0.0)
+# opcional: alinhar nome de custo dos componentes com o da listagem
+df_componentes_kits["Úl.Pr.Cmp. [Artigos]"] = df_componentes_kits["Úl.Pr.Cmp."]
 
-st.write("### 🟢 listagem com kits decompostos")
+# adicionar componentes de kits à listagem
+if not df_componentes_kits.empty:
+    listagem = pd.concat([listagem, df_componentes_kits], ignore_index=True)
+
+st.write("### 🟢 listagem final com kits decompostos adicionados")
 st.dataframe(listagem)
 
-listagem_sem_custos = listagem[listagem["Úl.Pr.Cmp. [Artigos]"].isna()].copy()
-st.write("### 🟡 Artigos sem ultimo preço de compra.")
-st.dataframe(listagem_sem_custos)
-
-##POS FINAL
-
+# =========================
+# 9. Identificar artigos sem último preço de compra
+# =========================
 listagem["Úl.Pr.Cmp. [Artigos]"] = pd.to_numeric(
     listagem["Úl.Pr.Cmp. [Artigos]"], errors="coerce"
 )
 
+listagem_sem_custos = listagem[listagem["Úl.Pr.Cmp. [Artigos]"].isna()].copy()
+st.write("### 🟡 Artigos sem último preço de compra")
+st.dataframe(listagem_sem_custos)
+
+# =========================
+# 10. Construir POS final
+# =========================
 POS = listagem.assign(
     **{
         "Distributor SAP Acct #": 70465299,
@@ -227,6 +248,9 @@ POS = POS.dropna(subset=["Customer Ship To Zip Code"])
 st.write("### ❇️ POS terminada")
 st.dataframe(POS)
 
+# =========================
+# 11. Exportar POS em XLSX
+# =========================
 buffer_pos = BytesIO()
 POS.to_excel(buffer_pos, index=False, engine="openpyxl")
 buffer_pos.seek(0)
