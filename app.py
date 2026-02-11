@@ -35,6 +35,7 @@ listagem.columns = (
 
 # 🔹 Manter apenas linhas onde Descrição [Tipos de Documentos] == "Fatura"
 listagem = listagem[listagem["Descrição [Tipos de Documentos]"] == "Fatura"].copy()
+listagem = listagem[listagem["Família [Artigos]"] == "KENNA"].copy()
 
-st.write("### listagem após ajuste e filtro (apenas Fatura)")
+st.write("### listagem após ajuste e filtros")
 st.dataframe(listagem)
