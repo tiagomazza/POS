@@ -30,6 +30,33 @@ listagem.columns = (
 )
 
 # =========================
+# 1.1. Validação de colunas necessárias
+# =========================
+colunas_necessarias = [
+    "Descrição [Tipos de Documentos]",
+    "Família [Artigos]",
+    "Descrição [Artigos]",
+    "Artigo [Documentos GC Lin]",
+    "Abrev. [Artigos]",
+    "Número [Clientes]",
+    "Cód.Postal [Clientes]",
+    "Quant [Documentos GC Lin]",
+    "Data",
+]
+
+colunas_presentes = listagem.columns.astype(str).tolist()
+faltantes = [c for c in colunas_necessarias if c not in colunas_presentes]
+
+if faltantes:
+    st.error(
+        "O ficheiro carregado não contém todas as colunas necessárias para o processamento.\n\n"
+        "Colunas em falta:\n- " + "\n- ".join(faltantes)
+    )
+    st.stop()
+else:
+    st.success("✔ O ficheiro contém todas as colunas necessárias para o processo.")
+
+# =========================
 # 2. Filtros base (Fatura / KENNA) e limpeza
 # =========================
 listagem = listagem[listagem["Descrição [Tipos de Documentos]"] == "Fatura"].copy()
