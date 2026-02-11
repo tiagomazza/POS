@@ -40,5 +40,6 @@ df_kits = listagem[
     .str.contains("TORNO", case=False, na=False)
 ].copy()
 
-st.write("DF Kits")
+st.write("DF na listagem Kits")
 st.dataframe(df_kits)
+
