@@ -63,7 +63,7 @@ listagem = merged[merged["_merge"] == "left_only"].drop(
     errors="ignore"
 )
 
-st.write("### listagem após remover clientes de revenda")
+st.write("### 🟢listagem após remover clientes de revenda")
 st.dataframe(listagem)
 
 df_kits = listagem[
@@ -142,6 +142,12 @@ kits_sem_corresp = kits_sem_corresp[kits_sem_corresp["_merge"] == "left_only"].d
     errors="ignore"
 )
 
+st.write("### 💰adicionado preço de custo aos KITs")
+st.dataframe(df_componentes_kits)
+
+if not df_componentes_kits.empty:
+    listagem = pd.concat([listagem, df_componentes_kits], ignore_index=True)
+
 st.write("### ❌ Kits não encontrados")
 st.dataframe(kits_sem_corresp)
 
@@ -156,7 +162,7 @@ mask_sem_kit_abrev = (
 
 listagem = listagem[mask_sem_kit_desc & mask_sem_kit_abrev].copy()
 
-st.write("### 🧹listagem após remover KIT")
+st.write("### 🟢listagem após remover KIT")
 st.dataframe(listagem)
 
 preco_custo = pd.read_excel("data/preço_custo.xlsx")
@@ -173,12 +179,6 @@ df_componentes_kits = df_componentes_kits.merge(
 df_componentes_kits["Úl.Pr.Cmp."] = df_componentes_kits["preço_custo"]
 df_componentes_kits = df_componentes_kits.drop(columns=["sap", "preço_custo"], errors="ignore")
 df_componentes_kits["Úl.Pr.Cmp."] = pd.to_numeric(df_componentes_kits["Úl.Pr.Cmp."], errors="coerce").fillna(0.0)
-
-st.write("### 💰adicionado preço de custo")
-st.dataframe(df_componentes_kits)
-
-if not df_componentes_kits.empty:
-    listagem = pd.concat([listagem, df_componentes_kits], ignore_index=True)
 
 st.write("### 🟢 listagem com kits decompostos")
 st.dataframe(listagem)
