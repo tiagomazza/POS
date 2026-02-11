@@ -89,3 +89,31 @@ df_componentes_kits["Abrev. [Artigos]"] = (
 df_componentes_kits = df_componentes_kits.dropna(subset=["Abrev. [Artigos]"])
 st.write("### df_componentes_kits (equivalente ao loop em R)")
 st.dataframe(df_componentes_kits)
+
+# 1) Filtrar apenas linhas com KIT na listagem
+kits_listagem = listagem[
+    listagem["Descrição [Artigos]"]
+    .astype(str)
+    .str.contains("KIT", case=False, na=False)
+].copy()
+
+# 2) Garantir tipos compatíveis para o match
+kits_listagem["Artigo [Documentos GC Lin]"] = kits_listagem["Artigo [Documentos GC Lin]"].astype(str)
+componentes_dos_kits["codigo_aba"] = componentes_dos_kits["codigo_aba"].astype(str)
+
+# 3) Anti-join: kits da listagem que NÃO têm correspondência em componentes_dos_kits
+kits_sem_corresp = kits_listagem.merge(
+    componentes_dos_kits[["codigo_aba"]],
+    left_on="Artigo [Documentos GC Lin]",
+    right_on="codigo_aba",
+    how="left",
+    indicator=True,
+)
+
+kits_sem_corresp = kits_sem_corresp[kits_sem_corresp["_merge"] == "left_only"].drop(
+    columns=["codigo_aba", "_merge"],
+    errors="ignore"
+)
+
+st.write("### Kits na listagem sem correspondência em componentes_dos_kits")
+st.dataframe(kits_sem_corresp)
