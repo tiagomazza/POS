@@ -240,16 +240,3 @@ POS = POS.dropna(subset=["Customer Ship To Zip Code"])
 
 st.write("### POS pronto")
 st.dataframe(POS)
-Se quiseres usar o POS_ABA.xls apenas como template (por exemplo, para garantir ordem de colunas), podes ler e depois substituir as colunas relevantes pelo POS criado acima, mas funcionalmente o R também ignora o conteúdo do ficheiro e só usa a listagem para construir o POS final.
-
-Acompanhamentos
-
-como salvar o df POS como arquivo excel
-
-adicione colunas calculadas no df POS usando assign
-
-faça merge do df POS com df_componentes_kits
-
-mostre df POS.head() e info() no streamlit
-
-exporte df POS para POS_ABA_processado.xls
