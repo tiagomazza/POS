@@ -43,6 +43,38 @@ df_kits = listagem[
 st.write("DF na listagem Kits")
 st.dataframe(df_kits)
 
+# 1) Ler revenda.xlsx
+revenda = pd.read_excel("data/revenda.xlsx")
+revenda["revenda"] = revenda["revenda"].astype(str)
+listagem["Número [Clientes]"] = listagem["Número [Clientes]"].astype(str)
+
+# 2) Juntar para identificar quais são de revenda
+merged = listagem.merge(
+    revenda[["revenda"]],
+    left_on="Número [Clientes]",
+    right_on="revenda",
+    how="left",
+    indicator=True,
+)
+
+# 3) Dataframe com as observações RETIRADAS (clientes que estão na lista de revenda)
+retirados_revenda = merged[merged["_merge"] == "both"].drop(
+    columns=["revenda", "_merge"],
+    errors="ignore"
+)
+
+st.write("### Observações retiradas (Número [Clientes] presente em revenda)")
+st.dataframe(retirados_revenda)
+
+# 4) Atualizar df listagem mantendo apenas quem NÃO está em revenda
+listagem = merged[merged["_merge"] == "left_only"].drop(
+    columns=["revenda", "_merge"],
+    errors="ignore"
+)
+
+st.write("### listagem após remover clientes de revenda")
+st.dataframe(listagem)
+
 componentes_dos_kits = pd.read_excel("data/componentes_kits.xlsx")
 
 st.write("### componentes dos kits (data/componentes_kits.xlsx)")
