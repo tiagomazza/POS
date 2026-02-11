@@ -37,7 +37,7 @@ st.dataframe(listagem)
 df_kits = listagem[
     listagem["Descrição [Artigos]"]
     .astype(str)              
-    .str.contains("TORNO", case=False, na=False)
+    .str.contains("KIT", case=False, na=False)
 ].copy()
 
 st.write("DF na listagem Kits")
