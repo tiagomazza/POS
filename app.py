@@ -165,20 +165,13 @@ listagem = listagem[mask_sem_kit_desc & mask_sem_kit_abrev].copy()
 st.write("### listagem após remover observações com KIT")
 st.dataframe(listagem)
 
-# 2) Adicionar as observações de df_componentes_kits
-if not df_componentes_kits.empty:
-    listagem = pd.concat([listagem, df_componentes_kits], ignore_index=True)
-
-st.write("### listagem após adicionar df_componentes_kits")
-st.dataframe(listagem)
-
 preco_custo = pd.read_excel("data/preço_custo.xlsx")
 # garantir que sap é string
 preco_custo["sap"] = preco_custo["sap"].astype(str)
-listagem["Abrev. [Artigos]"] = listagem["Abrev. [Artigos]"].astype(str)
+df_componentes_kits["Abrev. [Artigos]"] = df_componentes_kits["Abrev. [Artigos]"].astype(str)
 
 # 2) Fazer o merge (left join) para trazer preço_custo
-listagem = listagem.merge(
+df_componentes_kits = df_componentes_kits(
     preco_custo[["sap", "preço_custo"]],
     left_on="Abrev. [Artigos]",
     right_on="sap",
@@ -187,27 +180,33 @@ listagem = listagem.merge(
 
 # 3) Copiar o valor de preço_custo para a coluna Úl.Pr.Cmp.
 #    (se ainda não existir, será criada agora)
-listagem["Úl.Pr.Cmp."] = listagem["preço_custo"]
+df_componentes_kits["Úl.Pr.Cmp."] = df_componentes_kits["preço_custo"]
 
 # 4) (Opcional) limpar colunas auxiliares
-listagem = listagem.drop(columns=["sap", "preço_custo"], errors="ignore")
+df_componentes_kits = df_componentes_kits.drop(columns=["sap", "preço_custo"], errors="ignore")
 
 # 5) (Opcional) garantir numérico
-listagem["Úl.Pr.Cmp."] = pd.to_numeric(listagem["Úl.Pr.Cmp."], errors="coerce").fillna(0.0)
+df_componentes_kits["Úl.Pr.Cmp."] = pd.to_numeric(df_componentes_kits["Úl.Pr.Cmp."], errors="coerce").fillna(0.0)
 
-st.write("### listagem após join com preço_custo")
+st.write("### kits após join com preço_custo")
 st.dataframe(listagem)
 
+# 2) Adicionar as observações de df_componentes_kits
+if not df_componentes_kits.empty:
+    listagem = pd.concat([listagem, df_componentes_kits], ignore_index=True)
+
+st.write("### listagem após adicionar df_componentes_kits")
+st.dataframe(listagem)
+
+
+# garantir que a coluna existe; ajusta o nome se for "Úl.Pr.Cmp. [Artigos]"
 col_custo = "Úl.Pr.Cmp."
 
-# Converter para numérico, transformando None/"" em NaN
+# se ainda não for numérico, opcional:
 listagem[col_custo] = pd.to_numeric(listagem[col_custo], errors="coerce")
 
-# Linhas sem custo: NaN (inclui None) ou, opcionalmente, 0
-df_sem_custo = listagem[
-    listagem[col_custo].isna()    # None / NaN
-    # | (listagem[col_custo] == 0)  # descomenta se 0 também contar
-].copy()
+# df apenas com linhas SEM valor em Úl.Pr.Cmp.
+df_sem_custo = listagem[listagem[col_custo].isna()].copy()
 
-st.write("### Observações sem Úl.Pr.Cmp. (NaN/None)")
+st.write("### Observações sem Úl.Pr.Cmp.")
 st.dataframe(df_sem_custo)
