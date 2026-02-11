@@ -83,8 +83,8 @@ else:
 
 df_componentes_kits["Abrev. [Artigos]"] = (
     df_componentes_kits["Abrev. [Artigos]"]
-    .replace("", pd.NA)
-    .replace(" ", pd.NA)
+    .replace("nan", pd.NA)
+    .replace("nan", pd.NA)
 )
 df_componentes_kits = df_componentes_kits.dropna(subset=["Abrev. [Artigos]"])
 st.write("### df_componentes_kits (equivalente ao loop em R)")
