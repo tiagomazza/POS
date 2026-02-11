@@ -125,7 +125,6 @@ kits_listagem = listagem[
     .str.contains("KIT", case=False, na=False)
 ].copy()
 
-
 kits_listagem["Artigo [Documentos GC Lin]"] = kits_listagem["Artigo [Documentos GC Lin]"].astype(str)
 componentes_dos_kits["codigo_aba"] = componentes_dos_kits["codigo_aba"].astype(str)
 
@@ -151,6 +150,20 @@ if not df_componentes_kits.empty:
 st.write("### ❌ Kits não encontrados")
 st.dataframe(kits_sem_corresp)
 
+preco_custo = pd.read_excel("data/preço_custo.xlsx")
+preco_custo["sap"] = preco_custo["sap"].astype(str)
+df_componentes_kits["Abrev. [Artigos]"] = df_componentes_kits["Abrev. [Artigos]"].astype(str)
+
+st.write("### 🧩preço de custo dos componentes dos kits")
+st.dataframe(preco_custo)
+
+df_componentes_kits = df_componentes_kits.merge(
+    preco_custo[["sap", "preço_custo"]],
+    left_on="Abrev. [Artigos]",
+    right_on="sap",
+    how="left",
+)
+
 mask_sem_kit_desc = (
     listagem["Descrição [Artigos]"].isna()
     | ~listagem["Descrição [Artigos]"].astype(str).str.contains("KIT", case=False, na=True)
@@ -165,17 +178,6 @@ listagem = listagem[mask_sem_kit_desc & mask_sem_kit_abrev].copy()
 st.write("### 🟢listagem após remover KIT")
 st.dataframe(listagem)
 
-preco_custo = pd.read_excel("data/preço_custo.xlsx")
-preco_custo["sap"] = preco_custo["sap"].astype(str)
-df_componentes_kits["Abrev. [Artigos]"] = df_componentes_kits["Abrev. [Artigos]"].astype(str)
-
-df_componentes_kits = df_componentes_kits.merge(
-    preco_custo[["sap", "preço_custo"]],
-    left_on="Abrev. [Artigos]",
-    right_on="sap",
-    how="left",
-)
-
 df_componentes_kits["Úl.Pr.Cmp."] = df_componentes_kits["preço_custo"]
 df_componentes_kits = df_componentes_kits.drop(columns=["sap", "preço_custo"], errors="ignore")
 df_componentes_kits["Úl.Pr.Cmp."] = pd.to_numeric(df_componentes_kits["Úl.Pr.Cmp."], errors="coerce").fillna(0.0)
@@ -184,11 +186,11 @@ st.write("### 🟢 listagem com kits decompostos")
 st.dataframe(listagem)
 
 listagem_sem_custos = listagem[listagem["Úl.Pr.Cmp. [Artigos]"].isna()].copy()
-
 st.write("### 🟡 Artigos sem ultimo preço de compra.")
 st.dataframe(listagem_sem_custos)
 
-# garantir numérico para o custo
+##POS FINAL
+
 listagem["Úl.Pr.Cmp. [Artigos]"] = pd.to_numeric(
     listagem["Úl.Pr.Cmp. [Artigos]"], errors="coerce"
 )
@@ -220,7 +222,6 @@ cols_pos = [
 ]
 
 POS = POS[cols_pos].copy()
-
 POS = POS.dropna(subset=["Customer Ship To Zip Code"])
 
 st.write("### ❇️ POS terminada")
