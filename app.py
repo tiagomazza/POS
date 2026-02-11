@@ -43,3 +43,8 @@ df_kits = listagem[
 st.write("DF na listagem Kits")
 st.dataframe(df_kits)
 
+# 🔹 Novo: ler e mostrar componentes dos kits
+componentes_dos_kits = pd.read_excel("data/componentes_kits.xlsx")
+
+st.write("### componentes dos kits (data/componentes_kits.xlsx)")
+st.dataframe(componentes_dos_kits)
