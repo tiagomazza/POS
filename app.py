@@ -2,10 +2,10 @@ import streamlit as st
 import pandas as pd
 from io import BytesIO
 
-st.title("Processamento de POS – KENNA")
+st.title("POS – KENNAMETAL")
 
 uploaded_file = st.file_uploader(
-    "Carregar listagem.xls ou listagem.xlsx",
+    "Carregar ficheiros *.xls ou *.xlsx",
     type=["xls", "xlsx"]
 )
 if uploaded_file is None:
@@ -30,8 +30,9 @@ listagem.columns = (
 
 listagem = listagem[listagem["Descrição [Tipos de Documentos]"] == "Fatura"].copy()
 listagem = listagem[listagem["Família [Artigos]"] == "KENNA"].copy()
+listagem = listagem.dropna(axis=1, how="all")
 
-st.write("### listagem após ajuste e filtros")
+st.write("### 🧹listagem após limpeza")
 st.dataframe(listagem)
 
 df_kits = listagem[
