@@ -252,3 +252,13 @@ POS = POS.dropna(subset=["Customer Ship To Zip Code"])
 st.write("### POS final (apenas colunas especificadas)")
 st.dataframe(POS)
 
+buffer_pos = BytesIO()
+POS.to_excel(buffer_pos, index=False, engine="openpyxl")
+buffer_pos.seek(0)
+
+st.download_button(
+    label="📥 Download POS_pronta.xlsx",
+    data=buffer_pos,
+    file_name="POS_pronta.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+)
