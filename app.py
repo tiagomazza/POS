@@ -43,8 +43,42 @@ df_kits = listagem[
 st.write("DF na listagem Kits")
 st.dataframe(df_kits)
 
-# 🔹 Novo: ler e mostrar componentes dos kits
 componentes_dos_kits = pd.read_excel("data/componentes_kits.xlsx")
 
 st.write("### componentes dos kits (data/componentes_kits.xlsx)")
 st.dataframe(componentes_dos_kits)
+
+# df_kits já existe
+# componentes_dos_kits já existe (lido de data/componentes_kits.xlsx)
+
+# garantir tipos compatíveis para o join
+df_kits["Número [Artigos]"] = df_kits["Número [Artigos]"].astype(str)
+componentes_dos_kits["codigo_aba"] = componentes_dos_kits["codigo_aba"].astype(str)
+
+novas_linhas = []
+
+for idx, row in df_kits.iterrows():
+    codigo = row["Número [Artigos]"]
+
+    # procurar linha(s) correspondente(s) no componentes_dos_kits
+    comp_rows = componentes_dos_kits[componentes_dos_kits["codigo_aba"] == codigo]
+
+    for _, comp in comp_rows.iterrows():
+        # iterar pelas colunas sap_1 ... sap_10
+        for i in range(1, 11):
+            col_sap = f"sap_{i}"
+            if col_sap in comp.index:
+                valor_sap = str(comp[col_sap]).strip()
+                if valor_sap and valor_sap.lower() != "nan":
+                    nova_obs = row.copy()
+                    nova_obs["Abrev. [Artigos]"] = valor_sap
+                    novas_linhas.append(nova_obs)
+
+# criar novo df com os componentes dos kits (linhas “explodidas”)
+if novas_linhas:
+    df_componentes_kits = pd.DataFrame(novas_linhas).reset_index(drop=True)
+else:
+    df_componentes_kits = pd.DataFrame(columns=df_kits.columns)
+
+st.write("### componentes dos kits (a partir de df_kits + componentes_dos_kits)")
+st.dataframe(df_componentes_kits)
