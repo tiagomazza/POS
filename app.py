@@ -189,7 +189,7 @@ df_componentes_kits = df_componentes_kits.drop(columns=["sap", "preço_custo"], 
 df_componentes_kits["Úl.Pr.Cmp."] = pd.to_numeric(df_componentes_kits["Úl.Pr.Cmp."], errors="coerce").fillna(0.0)
 
 st.write("### kits após join com preço_custo")
-st.dataframe(listagem)
+st.dataframe(df_componentes_kits)
 
 # 2) Adicionar as observações de df_componentes_kits
 if not df_componentes_kits.empty:
