@@ -172,6 +172,7 @@ if not df_componentes_kits.empty:
 st.write("### listagem após adicionar df_componentes_kits")
 st.dataframe(listagem)
 
+preco_custo = pd.read_excel("data/preço_custo.xlsx")
 # garantir que sap é string
 preco_custo["sap"] = preco_custo["sap"].astype(str)
 listagem["Abrev. [Artigos]"] = listagem["Abrev. [Artigos]"].astype(str)
