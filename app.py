@@ -171,3 +171,28 @@ if not df_componentes_kits.empty:
 
 st.write("### listagem após adicionar df_componentes_kits")
 st.dataframe(listagem)
+
+# garantir que sap é string
+preco_custo["sap"] = preco_custo["sap"].astype(str)
+listagem["Abrev. [Artigos]"] = listagem["Abrev. [Artigos]"].astype(str)
+
+# 2) Fazer o merge (left join) para trazer preço_custo
+listagem = listagem.merge(
+    preco_custo[["sap", "preço_custo"]],
+    left_on="Abrev. [Artigos]",
+    right_on="sap",
+    how="left",
+)
+
+# 3) Copiar o valor de preço_custo para a coluna Úl.Pr.Cmp.
+#    (se ainda não existir, será criada agora)
+listagem["Úl.Pr.Cmp."] = listagem["preço_custo"]
+
+# 4) (Opcional) limpar colunas auxiliares
+listagem = listagem.drop(columns=["sap", "preço_custo"], errors="ignore")
+
+# 5) (Opcional) garantir numérico
+listagem["Úl.Pr.Cmp."] = pd.to_numeric(listagem["Úl.Pr.Cmp."], errors="coerce").fillna(0.0)
+
+st.write("### listagem após join com preço_custo")
+st.dataframe(listagem)
