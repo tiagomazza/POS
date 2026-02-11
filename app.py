@@ -81,5 +81,11 @@ if novas_linhas:
 else:
     df_componentes_kits = pd.DataFrame(columns=listagem.columns)
 
+df_componentes_kits["Abrev. [Artigos]"] = (
+    df_componentes_kits["Abrev. [Artigos]"]
+    .replace("", pd.NA)
+    .replace(" ", pd.NA)
+)
+df_componentes_kits = df_componentes_kits.dropna(subset=["Abrev. [Artigos]"])
 st.write("### df_componentes_kits (equivalente ao loop em R)")
 st.dataframe(df_componentes_kits)
