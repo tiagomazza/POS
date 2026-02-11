@@ -7,7 +7,7 @@ st.title("POS – KENNAMETAL")
 # =========================
 # Botão de debug
 # =========================
-debug = st.checkbox("🐞 debug (mostrar passos intermédios)")
+debug = st.checkbox()
 
 # =========================
 # 1. Upload e leitura base
@@ -314,3 +314,4 @@ st.download_button(
     file_name="POS_pronta.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 )
+debug = st.checkbox("🐞 debug (mostrar passos intermédios)")
