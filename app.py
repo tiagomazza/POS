@@ -170,8 +170,9 @@ preco_custo = pd.read_excel("data/preço_custo.xlsx")
 preco_custo["sap"] = preco_custo["sap"].astype(str)
 df_componentes_kits["Abrev. [Artigos]"] = df_componentes_kits["Abrev. [Artigos]"].astype(str)
 
+
 # 2) Fazer o merge (left join) para trazer preço_custo
-df_componentes_kits = df_componentes_kits(
+df_componentes_kits = df_componentes_kits.merge(
     preco_custo[["sap", "preço_custo"]],
     left_on="Abrev. [Artigos]",
     right_on="sap",
