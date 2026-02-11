@@ -113,21 +113,19 @@ df_componentes_kits["Abrev. [Artigos]"] = (
     .replace("nan", pd.NA)
 )
 df_componentes_kits = df_componentes_kits.dropna(subset=["Abrev. [Artigos]"])
-st.write("### df_componentes_kits (equivalente ao loop em R)")
+st.write("### 💥Kit decomposto")
 st.dataframe(df_componentes_kits)
 
-# 1) Filtrar apenas linhas com KIT na listagem
 kits_listagem = listagem[
     listagem["Descrição [Artigos]"]
     .astype(str)
     .str.contains("KIT", case=False, na=False)
 ].copy()
 
-# 2) Garantir tipos compatíveis para o match
+
 kits_listagem["Artigo [Documentos GC Lin]"] = kits_listagem["Artigo [Documentos GC Lin]"].astype(str)
 componentes_dos_kits["codigo_aba"] = componentes_dos_kits["codigo_aba"].astype(str)
 
-# 3) Anti-join: kits da listagem que NÃO têm correspondência em componentes_dos_kits
 kits_sem_corresp = kits_listagem.merge(
     componentes_dos_kits[["codigo_aba"]],
     left_on="Artigo [Documentos GC Lin]",
@@ -141,10 +139,9 @@ kits_sem_corresp = kits_sem_corresp[kits_sem_corresp["_merge"] == "left_only"].d
     errors="ignore"
 )
 
-st.write("### Kits na listagem sem correspondência em componentes_dos_kits")
+st.write("### ❌ Kits não encontrados")
 st.dataframe(kits_sem_corresp)
 
-# 1) Remover da listagem todas as linhas que contenham "KIT"
 mask_sem_kit_desc = (
     listagem["Descrição [Artigos]"].isna()
     | ~listagem["Descrição [Artigos]"].astype(str).str.contains("KIT", case=False, na=True)
@@ -156,16 +153,13 @@ mask_sem_kit_abrev = (
 
 listagem = listagem[mask_sem_kit_desc & mask_sem_kit_abrev].copy()
 
-st.write("### listagem após remover observações com KIT")
+st.write("### 🧹listagem após remover KIT")
 st.dataframe(listagem)
 
 preco_custo = pd.read_excel("data/preço_custo.xlsx")
-# garantir que sap é string
 preco_custo["sap"] = preco_custo["sap"].astype(str)
 df_componentes_kits["Abrev. [Artigos]"] = df_componentes_kits["Abrev. [Artigos]"].astype(str)
 
-
-# 2) Fazer o merge (left join) para trazer preço_custo
 df_componentes_kits = df_componentes_kits.merge(
     preco_custo[["sap", "preço_custo"]],
     left_on="Abrev. [Artigos]",
@@ -173,17 +167,11 @@ df_componentes_kits = df_componentes_kits.merge(
     how="left",
 )
 
-# 3) Copiar o valor de preço_custo para a coluna Úl.Pr.Cmp.
-#    (se ainda não existir, será criada agora)
 df_componentes_kits["Úl.Pr.Cmp."] = df_componentes_kits["preço_custo"]
-
-# 4) (Opcional) limpar colunas auxiliares
 df_componentes_kits = df_componentes_kits.drop(columns=["sap", "preço_custo"], errors="ignore")
-
-# 5) (Opcional) garantir numérico
 df_componentes_kits["Úl.Pr.Cmp."] = pd.to_numeric(df_componentes_kits["Úl.Pr.Cmp."], errors="coerce").fillna(0.0)
 
-st.write("### kits após join com preço_custo")
+st.write("### 💰adicionado preço de custo")
 st.dataframe(df_componentes_kits)
 
 # 2) Adicionar as observações de df_componentes_kits
@@ -192,7 +180,6 @@ if not df_componentes_kits.empty:
 
 st.write("### listagem após adicionar df_componentes_kits")
 st.dataframe(listagem)
-
 
 # garantir que a coluna existe; ajusta o nome se for "Úl.Pr.Cmp. [Artigos]"
 col_custo = "Úl.Pr.Cmp."
@@ -225,7 +212,6 @@ POS = listagem.assign(
     }
 )
 
-# manter só as colunas do POS (limpa qualquer herança da listagem)
 cols_pos = [
     "Distributor SAP Acct #",
     "Customer Ship To Country",
@@ -240,10 +226,9 @@ cols_pos = [
 
 POS = POS[cols_pos].copy()
 
-# remover linhas sem código postal
 POS = POS.dropna(subset=["Customer Ship To Zip Code"])
 
-st.write("### POS final (apenas colunas especificadas)")
+st.write("### ❇️ POS terminada")
 st.dataframe(POS)
 
 buffer_pos = BytesIO()
@@ -251,7 +236,7 @@ POS.to_excel(buffer_pos, index=False, engine="openpyxl")
 buffer_pos.seek(0)
 
 st.download_button(
-    label="📥 Download POS_pronta.xlsx",
+    label="📥 Download_POS.xlsx",
     data=buffer_pos,
     file_name="POS_pronta.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
