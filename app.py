@@ -183,27 +183,27 @@ df_componentes_kits["Úl.Pr.Cmp."] = pd.to_numeric(df_componentes_kits["Úl.Pr.C
 st.write("### 🟢 listagem com kits decompostos")
 st.dataframe(listagem)
 
-df_sem_custo = listagem[listagem["Úl.Pr.Cmp. [Artigos]"].isna()].copy()
+listagem = listagem[listagem["Úl.Pr.Cmp. [Artigos]"].isna()].copy()
 
 st.write("### 🟡 Artigos sem ultimo preço de compra.")
-st.dataframe(df_sem_custo)
+st.dataframe(listagem)
 
 # garantir numérico para o custo
 listagem["Úl.Pr.Cmp. [Artigos]"] = pd.to_numeric(
     listagem["Úl.Pr.Cmp. [Artigos]"], errors="coerce"
 )
 
-POS = df_sem_custo.assign(
+POS = listagem.assign(
     **{
         "Distributor SAP Acct #": 70465299,
         "Customer Ship To Country": "PT",
-        "Customer Ship To Zip Code": df_sem_custo["Cód.Postal [Clientes]"],
-        "SAP Material Master No.": df_sem_custo["Abrev. [Artigos]"],
+        "Customer Ship To Zip Code": listagem["Cód.Postal [Clientes]"],
+        "SAP Material Master No.": listagem["Abrev. [Artigos]"],
         "ANSI Catalog No./Grade Item Number": "",
-        "Qty Sold": df_sem_custo["Quant [Documentos GC Lin]"],
-        "Invoice Date": df_sem_custo["Data"],
+        "Qty Sold": listagem["Quant [Documentos GC Lin]"],
+        "Invoice Date": listagem["Data"],
         "Deal Registration ID": "",
-        "Total Distributor Cost": df_sem_custo["Úl.Pr.Cmp. [Artigos]"].round(2),
+        "Total Distributor Cost": listagem["Úl.Pr.Cmp. [Artigos]"].round(2),
     }
 )
 
