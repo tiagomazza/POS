@@ -7,13 +7,13 @@ st.title("POS – KENNAMETAL")
 # =========================
 # Botão de debug
 # =========================
-debug = st.checkbox("🐞")
+debug = st.checkbox("👾")
 
 # =========================
 # 1. Upload e leitura base
 # =========================
 uploaded_file = st.file_uploader(
-    "Carregar ficheiros *.xls ou *.xlsx",
+    "",
     type=["xls", "xlsx"]
 )
 if uploaded_file is None:
@@ -314,4 +314,3 @@ st.download_button(
     file_name="POS_pronta.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 )
-debug = st.checkbox("🐞 debug (mostrar passos intermédios)")
