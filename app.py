@@ -198,14 +198,16 @@ listagem["Úl.Pr.Cmp."] = pd.to_numeric(listagem["Úl.Pr.Cmp."], errors="coerce"
 st.write("### listagem após join com preço_custo")
 st.dataframe(listagem)
 
-# garantir que a coluna existe; ajusta o nome se for "Úl.Pr.Cmp. [Artigos]"
 col_custo = "Úl.Pr.Cmp."
 
-# se ainda não for numérico, opcional:
+# Converter para numérico, transformando None/"" em NaN
 listagem[col_custo] = pd.to_numeric(listagem[col_custo], errors="coerce")
 
-# df apenas com linhas SEM valor em Úl.Pr.Cmp.
-df_sem_custo = listagem[listagem[col_custo].isna()].copy()
+# Linhas sem custo: NaN (inclui None) ou, opcionalmente, 0
+df_sem_custo = listagem[
+    listagem[col_custo].isna()    # None / NaN
+    # | (listagem[col_custo] == 0)  # descomenta se 0 também contar
+].copy()
 
-st.write("### Observações sem Úl.Pr.Cmp.")
+st.write("### Observações sem Úl.Pr.Cmp. (NaN/None)")
 st.dataframe(df_sem_custo)
