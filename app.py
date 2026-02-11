@@ -7,7 +7,7 @@ st.title("POS – KENNAMETAL")
 # =========================
 # Botão de debug
 # =========================
-debug = st.checkbox(🐞)
+debug = st.checkbox("🐞")
 
 # =========================
 # 1. Upload e leitura base
