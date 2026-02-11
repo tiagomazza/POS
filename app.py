@@ -5,6 +5,11 @@ from io import BytesIO
 st.title("POS – KENNAMETAL")
 
 # =========================
+# Botão de debug
+# =========================
+debug = st.checkbox("🐞 debug (mostrar passos intermédios)")
+
+# =========================
 # 1. Upload e leitura base
 # =========================
 uploaded_file = st.file_uploader(
@@ -54,7 +59,10 @@ if faltantes:
     )
     st.stop()
 else:
-    st.success("✔ O ficheiro contém todas as colunas necessárias para o processo.")
+    if debug:
+        st.success("✔ O ficheiro contém todas as colunas necessárias para o processo.")
+        st.write("Colunas detectadas:")
+        st.write(listagem.columns.tolist())
 
 # =========================
 # 2. Filtros base (Fatura / KENNA) e limpeza
@@ -64,8 +72,9 @@ listagem = listagem.drop(columns=["Descrição [Tipos de Documentos]"], errors="
 listagem = listagem[listagem["Família [Artigos]"] == "KENNA"].copy()
 listagem = listagem.dropna(axis=1, how="all")
 
-st.write("### 🧹 listagem após limpeza inicial (Fatura / KENNA)")
-st.dataframe(listagem)
+if debug:
+    st.write("### 🧹 listagem após limpeza inicial (Fatura / KENNA)")
+    st.dataframe(listagem)
 
 # =========================
 # 3. Remover clientes de revenda
@@ -86,15 +95,19 @@ retirados_revenda = merged[merged["_merge"] == "both"].drop(
     columns=["revenda", "_merge"],
     errors="ignore"
 )
-st.write("### 🔎 Revendas encontradas")
-st.dataframe(retirados_revenda)
+
+if debug:
+    st.write("### 🔎 Revendas encontradas")
+    st.dataframe(retirados_revenda)
 
 listagem = merged[merged["_merge"] == "left_only"].drop(
     columns=["revenda", "_merge"],
     errors="ignore"
 )
-st.write("### 🟢 listagem após remover clientes de revenda")
-st.dataframe(listagem)
+
+if debug:
+    st.write("### 🟢 listagem após remover clientes de revenda")
+    st.dataframe(listagem)
 
 # =========================
 # 4. Identificar KITS na listagem
@@ -104,15 +117,19 @@ df_kits = listagem[
     .astype(str)
     .str.contains("KIT", case=False, na=False)
 ].copy()
-st.write("### 🔎 Kits encontrados na listagem")
-st.dataframe(df_kits)
+
+if debug:
+    st.write("### 🔎 Kits encontrados na listagem")
+    st.dataframe(df_kits)
 
 # =========================
 # 5. Ler componentes dos kits e decompor
 # =========================
 componentes_dos_kits = pd.read_excel("data/componentes_kits.xlsx")
-st.write("### 🧩 componentes dos kits (data/componentes_kits.xlsx)")
-st.dataframe(componentes_dos_kits)
+
+if debug:
+    st.write("### 🧩 componentes dos kits (data/componentes_kits.xlsx)")
+    st.dataframe(componentes_dos_kits)
 
 nome_coluna_abrev = "Abrev. [Artigos]"
 nome_coluna_artigo = "Artigo [Documentos GC Lin]"
@@ -146,13 +163,13 @@ else:
 
 # limpar Abrev vazios
 df_componentes_kits["Abrev. [Artigos]"] = (
-    df_componentes_kits["Abrev. [Artigos]"]
-    .replace("nan", pd.NA)
+    df_componentes_kits["Abrev. [Artigos]"].replace("nan", pd.NA)
 )
 df_componentes_kits = df_componentes_kits.dropna(subset=["Abrev. [Artigos]"])
 
-st.write("### 💥 Kits decompostos em componentes")
-st.dataframe(df_componentes_kits)
+if debug:
+    st.write("### 💥 Kits decompostos em componentes")
+    st.dataframe(df_componentes_kits)
 
 # =========================
 # 6. Kits sem correspondência em componentes_dos_kits
@@ -173,7 +190,9 @@ kits_sem_corresp = kits_sem_corresp[kits_sem_corresp["_merge"] == "left_only"].d
     columns=[nome_coluna_codigo, "_merge"],
     errors="ignore"
 )
-st.write("### ❌ Kits na listagem sem correspondência em componentes_kits")
+
+# ❌ Sempre visível
+st.write("### ❌ Kits na listagem sem correspondência")
 st.dataframe(kits_sem_corresp)
 
 # =========================
@@ -183,8 +202,9 @@ preco_custo = pd.read_excel("data/preço_custo.xlsx")
 preco_custo["sap"] = preco_custo["sap"].astype(str)
 df_componentes_kits["Abrev. [Artigos]"] = df_componentes_kits["Abrev. [Artigos]"].astype(str)
 
-st.write("### 🧩 tabela de preço de custo (preço_custo.xlsx)")
-st.dataframe(preco_custo)
+if debug:
+    st.write("### 🧩 tabela de preço de custo (preço_custo.xlsx)")
+    st.dataframe(preco_custo)
 
 df_componentes_kits = df_componentes_kits.merge(
     preco_custo[["sap", "preço_custo"]],
@@ -199,8 +219,9 @@ df_componentes_kits["Úl.Pr.Cmp."] = pd.to_numeric(
     df_componentes_kits["Úl.Pr.Cmp."], errors="coerce"
 ).fillna(0.0)
 
-st.write("### 💰 Componentes de kits com preço de custo")
-st.dataframe(df_componentes_kits)
+if debug:
+    st.write("### 💰 Componentes de kits com preço de custo")
+    st.dataframe(df_componentes_kits)
 
 # =========================
 # 8. Remover linhas de KIT da listagem base e adicionar componentes
@@ -216,18 +237,20 @@ mask_sem_kit_abrev = (
 
 listagem = listagem[mask_sem_kit_desc & mask_sem_kit_abrev].copy()
 
-st.write("### 🟢 listagem após remover linhas de KIT")
-st.dataframe(listagem)
+if debug:
+    st.write("### 🟢 listagem após remover linhas de KIT")
+    st.dataframe(listagem)
 
-# opcional: alinhar nome de custo dos componentes com o da listagem
+# alinhar nome de custo dos componentes com o da listagem
 df_componentes_kits["Úl.Pr.Cmp. [Artigos]"] = df_componentes_kits["Úl.Pr.Cmp."]
 
 # adicionar componentes de kits à listagem
 if not df_componentes_kits.empty:
     listagem = pd.concat([listagem, df_componentes_kits], ignore_index=True)
 
-st.write("### 🟢 listagem final com kits decompostos adicionados")
-st.dataframe(listagem)
+if debug:
+    st.write("### 🟢 listagem final com kits decompostos adicionados")
+    st.dataframe(listagem)
 
 # =========================
 # 9. Identificar artigos sem último preço de compra
@@ -237,6 +260,8 @@ listagem["Úl.Pr.Cmp. [Artigos]"] = pd.to_numeric(
 )
 
 listagem_sem_custos = listagem[listagem["Úl.Pr.Cmp. [Artigos]"].isna()].copy()
+
+# 🟡 Sempre visível
 st.write("### 🟡 Artigos sem último preço de compra")
 st.dataframe(listagem_sem_custos)
 
@@ -272,6 +297,7 @@ cols_pos = [
 POS = POS[cols_pos].copy()
 POS = POS.dropna(subset=["Customer Ship To Zip Code"])
 
+# ❇️ Sempre visível
 st.write("### ❇️ POS terminada")
 st.dataframe(POS)
 
