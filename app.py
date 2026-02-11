@@ -117,3 +117,25 @@ kits_sem_corresp = kits_sem_corresp[kits_sem_corresp["_merge"] == "left_only"].d
 
 st.write("### Kits na listagem sem correspondência em componentes_dos_kits")
 st.dataframe(kits_sem_corresp)
+
+# 1) Remover da listagem todas as linhas que contenham "KIT"
+mask_sem_kit_desc = (
+    listagem["Descrição [Artigos]"].isna()
+    | ~listagem["Descrição [Artigos]"].astype(str).str.contains("KIT", case=False, na=True)
+)
+mask_sem_kit_abrev = (
+    listagem["Abrev. [Artigos]"].isna()
+    | ~listagem["Abrev. [Artigos]"].astype(str).str.contains("KIT", case=False, na=True)
+)
+
+listagem = listagem[mask_sem_kit_desc & mask_sem_kit_abrev].copy()
+
+st.write("### listagem após remover observações com KIT")
+st.dataframe(listagem)
+
+# 2) Adicionar as observações de df_componentes_kits
+if not df_componentes_kits.empty:
+    listagem = pd.concat([listagem, df_componentes_kits], ignore_index=True)
+
+st.write("### listagem após adicionar df_componentes_kits")
+st.dataframe(listagem)
