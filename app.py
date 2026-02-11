@@ -29,6 +29,7 @@ listagem.columns = (
 )
 
 listagem = listagem[listagem["Descrição [Tipos de Documentos]"] == "Fatura"].copy()
+listagem = listagem.drop(columns=["Descrição [Tipos de Documentos]"], errors="ignore")
 listagem = listagem[listagem["Família [Artigos]"] == "KENNA"].copy()
 listagem = listagem.dropna(axis=1, how="all")
 
@@ -74,7 +75,7 @@ st.dataframe(listagem)
 
 componentes_dos_kits = pd.read_excel("data/componentes_kits.xlsx")
 
-st.write("### componentes dos kits (data/componentes_kits.xlsx)")
+st.write("### 🧩componentes dos kits")
 st.dataframe(componentes_dos_kits)
 
 nome_coluna_abrev = "Abrev. [Artigos]"
