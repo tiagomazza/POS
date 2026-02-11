@@ -36,14 +36,7 @@ listagem = listagem.dropna(axis=1, how="all")
 st.write("### 🧹listagem após limpeza")
 st.dataframe(listagem)
 
-df_kits = listagem[
-    listagem["Descrição [Artigos]"]
-    .astype(str)              
-    .str.contains("KIT", case=False, na=False)
-].copy()
-
-st.write("### 🔎Kits encontrados")
-st.dataframe(df_kits)
+##REVENDA
 
 revenda = pd.read_excel("data/revenda.xlsx")
 revenda["revenda"] = revenda["revenda"].astype(str)
@@ -73,6 +66,15 @@ listagem = merged[merged["_merge"] == "left_only"].drop(
 st.write("### listagem após remover clientes de revenda")
 st.dataframe(listagem)
 
+df_kits = listagem[
+    listagem["Descrição [Artigos]"]
+    .astype(str)              
+    .str.contains("KIT", case=False, na=False)
+].copy()
+
+st.write("### 🔎Kits encontrados")
+st.dataframe(df_kits)
+
 componentes_dos_kits = pd.read_excel("data/componentes_kits.xlsx")
 
 st.write("### 🧩componentes dos kits")
@@ -101,8 +103,8 @@ for idx, row in listagem.iterrows():
                     nova_linha = row.copy()
                     nova_linha[nome_coluna_abrev] = novo_valor
                     novas_linhas.append(nova_linha)
-#?
-# criar df_componentes_kits
+
+
 if novas_linhas:
     df_componentes_kits = pd.concat(novas_linhas, axis=1).T.reset_index(drop=True)
 else:
@@ -175,23 +177,20 @@ df_componentes_kits["Úl.Pr.Cmp."] = pd.to_numeric(df_componentes_kits["Úl.Pr.C
 st.write("### 💰adicionado preço de custo")
 st.dataframe(df_componentes_kits)
 
-# 2) Adicionar as observações de df_componentes_kits
 if not df_componentes_kits.empty:
     listagem = pd.concat([listagem, df_componentes_kits], ignore_index=True)
 
-st.write("### listagem após adicionar df_componentes_kits")
+st.write("### 🟢 listagem com kits decompostos")
 st.dataframe(listagem)
 
-# garantir que a coluna existe; ajusta o nome se for "Úl.Pr.Cmp. [Artigos]"
-col_custo = "Úl.Pr.Cmp."
 
-# se ainda não for numérico, opcional:
+col_custo = "Úl.Pr.Cmp."
 listagem[col_custo] = pd.to_numeric(listagem[col_custo], errors="coerce")
 
 # df apenas com linhas SEM valor em Úl.Pr.Cmp.
 df_sem_custo = listagem[listagem[col_custo].isna()].copy()
 
-st.write("### Observações sem Úl.Pr.Cmp.")
+st.write("### 🟡 Artigos sem ultimo preço de compra.")
 st.dataframe(df_sem_custo)
 
 # garantir numérico para o custo
