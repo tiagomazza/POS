@@ -119,6 +119,19 @@ df_componentes_kits = df_componentes_kits.dropna(subset=["Abrev. [Artigos]"])
 st.write("### 💥Kit decomposto")
 st.dataframe(df_componentes_kits)
 
+if not df_componentes_kits.empty:
+    listagem = pd.concat([listagem, df_componentes_kits], ignore_index=True)
+
+st.write("### ❌ Kits não encontrados")
+st.dataframe(kits_sem_corresp)
+
+preco_custo = pd.read_excel("data/preço_custo.xlsx")
+preco_custo["sap"] = preco_custo["sap"].astype(str)
+df_componentes_kits["Abrev. [Artigos]"] = df_componentes_kits["Abrev. [Artigos]"].astype(str)
+
+st.write("### 🧩preço de custo dos componentes dos kits")
+st.dataframe(preco_custo)
+
 kits_listagem = listagem[
     listagem["Descrição [Artigos]"]
     .astype(str)
@@ -143,19 +156,6 @@ kits_sem_corresp = kits_sem_corresp[kits_sem_corresp["_merge"] == "left_only"].d
 
 st.write("### 💰adicionado preço de custo aos KITs")
 st.dataframe(df_componentes_kits)
-
-if not df_componentes_kits.empty:
-    listagem = pd.concat([listagem, df_componentes_kits], ignore_index=True)
-
-st.write("### ❌ Kits não encontrados")
-st.dataframe(kits_sem_corresp)
-
-preco_custo = pd.read_excel("data/preço_custo.xlsx")
-preco_custo["sap"] = preco_custo["sap"].astype(str)
-df_componentes_kits["Abrev. [Artigos]"] = df_componentes_kits["Abrev. [Artigos]"].astype(str)
-
-st.write("### 🧩preço de custo dos componentes dos kits")
-st.dataframe(preco_custo)
 
 df_componentes_kits = df_componentes_kits.merge(
     preco_custo[["sap", "preço_custo"]],
