@@ -48,37 +48,38 @@ componentes_dos_kits = pd.read_excel("data/componentes_kits.xlsx")
 st.write("### componentes dos kits (data/componentes_kits.xlsx)")
 st.dataframe(componentes_dos_kits)
 
-# df_kits já existe
-# componentes_dos_kits já existe (lido de data/componentes_kits.xlsx)
+nome_coluna_abrev = "Abrev. [Artigos]"
+nome_coluna_artigo = "Artigo [Documentos GC Lin]"
+nome_coluna_codigo = "codigo_aba"
 
-# garantir tipos compatíveis para o join
-df_kits["Número [Artigos]"] = df_kits["Número [Artigos]"].astype(str)
-componentes_dos_kits["codigo_aba"] = componentes_dos_kits["codigo_aba"].astype(str)
+# garantir que os tipos batem
+listagem[nome_coluna_artigo] = listagem[nome_coluna_artigo].astype(str)
+componentes_dos_kits[nome_coluna_codigo] = componentes_dos_kits[nome_coluna_codigo].astype(str)
 
 novas_linhas = []
 
-for idx, row in df_kits.iterrows():
-    codigo = row["Número [Artigos]"]
+for idx, row in listagem.iterrows():
+    valor_artigo = row[nome_coluna_artigo]
+    # índices das linhas em componentes_dos_kits com o mesmo codigo_aba
+    idx_comp = componentes_dos_kits.index[componentes_dos_kits[nome_coluna_codigo] == valor_artigo]
 
-    # procurar linha(s) correspondente(s) no componentes_dos_kits
-    comp_rows = componentes_dos_kits[componentes_dos_kits["codigo_aba"] == codigo]
+    if len(idx_comp) > 0:
+        for j in idx_comp:
+            linha_comp = componentes_dos_kits.loc[j]
+            # colunas 2:21 em R -> índices 1 a 20 em pandas
+            for col_idx in range(1, 21):
+                col_name = componentes_dos_kits.columns[col_idx]
+                novo_valor = str(linha_comp[col_name])
+                if pd.notna(novo_valor) and novo_valor.strip() != "":
+                    nova_linha = row.copy()
+                    nova_linha[nome_coluna_abrev] = novo_valor
+                    novas_linhas.append(nova_linha)
 
-    for _, comp in comp_rows.iterrows():
-        # iterar pelas colunas sap_1 ... sap_10
-        for i in range(1, 11):
-            col_sap = f"sap_{i}"
-            if col_sap in comp.index:
-                valor_sap = str(comp[col_sap]).strip()
-                if valor_sap and valor_sap.lower() != "nan":
-                    nova_obs = row.copy()
-                    nova_obs["Abrev. [Artigos]"] = valor_sap
-                    novas_linhas.append(nova_obs)
-
-# criar novo df com os componentes dos kits (linhas “explodidas”)
+# criar df_componentes_kits
 if novas_linhas:
-    df_componentes_kits = pd.DataFrame(novas_linhas).reset_index(drop=True)
+    df_componentes_kits = pd.concat(novas_linhas, axis=1).T.reset_index(drop=True)
 else:
-    df_componentes_kits = pd.DataFrame(columns=df_kits.columns)
+    df_componentes_kits = pd.DataFrame(columns=listagem.columns)
 
-st.write("### componentes dos kits (a partir de df_kits + componentes_dos_kits)")
+st.write("### df_componentes_kits (equivalente ao loop em R)")
 st.dataframe(df_componentes_kits)
