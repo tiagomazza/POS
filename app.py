@@ -212,15 +212,11 @@ df_sem_custo = listagem[listagem[col_custo].isna()].copy()
 st.write("### Observações sem Úl.Pr.Cmp.")
 st.dataframe(df_sem_custo)
 
-# se precisares mesmo de ler POS_ABA.xls (por consistência com o R)
-pos_aba = pd.read_excel("data/POS_ABA.xls")  # opcional, não é usado abaixo
-
-# garantir que Úl.Pr.Cmp. [Artigos] é numérico
+# garantir numérico para o custo
 listagem["Úl.Pr.Cmp. [Artigos]"] = pd.to_numeric(
     listagem["Úl.Pr.Cmp. [Artigos]"], errors="coerce"
 )
 
-# criar df POS nos mesmos moldes do R
 POS = listagem.assign(
     **{
         "Distributor SAP Acct #": 70465299,
@@ -235,8 +231,24 @@ POS = listagem.assign(
     }
 )
 
+# manter só as colunas do POS (limpa qualquer herança da listagem)
+cols_pos = [
+    "Distributor SAP Acct #",
+    "Customer Ship To Country",
+    "Customer Ship To Zip Code",
+    "SAP Material Master No.",
+    "ANSI Catalog No./Grade Item Number",
+    "Qty Sold",
+    "Invoice Date",
+    "Deal Registration ID",
+    "Total Distributor Cost",
+]
+
+POS = POS[cols_pos].copy()
+
 # remover linhas sem código postal
 POS = POS.dropna(subset=["Customer Ship To Zip Code"])
 
-st.write("### POS pronto")
+st.write("### POS final (apenas colunas especificadas)")
 st.dataframe(POS)
+
