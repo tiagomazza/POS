@@ -183,10 +183,10 @@ df_componentes_kits["Úl.Pr.Cmp."] = pd.to_numeric(df_componentes_kits["Úl.Pr.C
 st.write("### 🟢 listagem com kits decompostos")
 st.dataframe(listagem)
 
-listagem = listagem[listagem["Úl.Pr.Cmp. [Artigos]"].isna()].copy()
+listagem_sem_custos = listagem[listagem["Úl.Pr.Cmp. [Artigos]"].isna()].copy()
 
 st.write("### 🟡 Artigos sem ultimo preço de compra.")
-st.dataframe(listagem)
+st.dataframe(listagem_sem_custos)
 
 # garantir numérico para o custo
 listagem["Úl.Pr.Cmp. [Artigos]"] = pd.to_numeric(
