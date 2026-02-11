@@ -41,15 +41,13 @@ df_kits = listagem[
     .str.contains("KIT", case=False, na=False)
 ].copy()
 
-st.write("DF na listagem Kits")
+st.write("### 🔎Kits encontrados")
 st.dataframe(df_kits)
 
-# 1) Ler revenda.xlsx
 revenda = pd.read_excel("data/revenda.xlsx")
 revenda["revenda"] = revenda["revenda"].astype(str)
 listagem["Número [Clientes]"] = listagem["Número [Clientes]"].astype(str)
 
-# 2) Juntar para identificar quais são de revenda
 merged = listagem.merge(
     revenda[["revenda"]],
     left_on="Número [Clientes]",
@@ -58,16 +56,14 @@ merged = listagem.merge(
     indicator=True,
 )
 
-# 3) Dataframe com as observações RETIRADAS (clientes que estão na lista de revenda)
 retirados_revenda = merged[merged["_merge"] == "both"].drop(
     columns=["revenda", "_merge"],
     errors="ignore"
 )
 
-st.write("### Observações retiradas (Número [Clientes] presente em revenda)")
+st.write("### 🔎Revendas encontradas")
 st.dataframe(retirados_revenda)
 
-# 4) Atualizar df listagem mantendo apenas quem NÃO está em revenda
 listagem = merged[merged["_merge"] == "left_only"].drop(
     columns=["revenda", "_merge"],
     errors="ignore"
@@ -85,7 +81,6 @@ nome_coluna_abrev = "Abrev. [Artigos]"
 nome_coluna_artigo = "Artigo [Documentos GC Lin]"
 nome_coluna_codigo = "codigo_aba"
 
-# garantir que os tipos batem
 listagem[nome_coluna_artigo] = listagem[nome_coluna_artigo].astype(str)
 componentes_dos_kits[nome_coluna_codigo] = componentes_dos_kits[nome_coluna_codigo].astype(str)
 
@@ -93,13 +88,11 @@ novas_linhas = []
 
 for idx, row in listagem.iterrows():
     valor_artigo = row[nome_coluna_artigo]
-    # índices das linhas em componentes_dos_kits com o mesmo codigo_aba
     idx_comp = componentes_dos_kits.index[componentes_dos_kits[nome_coluna_codigo] == valor_artigo]
 
     if len(idx_comp) > 0:
         for j in idx_comp:
             linha_comp = componentes_dos_kits.loc[j]
-            # colunas 2:21 em R -> índices 1 a 20 em pandas
             for col_idx in range(1, 21):
                 col_name = componentes_dos_kits.columns[col_idx]
                 novo_valor = str(linha_comp[col_name])
@@ -107,7 +100,7 @@ for idx, row in listagem.iterrows():
                     nova_linha = row.copy()
                     nova_linha[nome_coluna_abrev] = novo_valor
                     novas_linhas.append(nova_linha)
-
+#?
 # criar df_componentes_kits
 if novas_linhas:
     df_componentes_kits = pd.concat(novas_linhas, axis=1).T.reset_index(drop=True)
