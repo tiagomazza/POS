@@ -211,3 +211,45 @@ df_sem_custo = listagem[listagem[col_custo].isna()].copy()
 
 st.write("### Observações sem Úl.Pr.Cmp.")
 st.dataframe(df_sem_custo)
+
+# se precisares mesmo de ler POS_ABA.xls (por consistência com o R)
+pos_aba = pd.read_excel("data/POS_ABA.xls")  # opcional, não é usado abaixo
+
+# garantir que Úl.Pr.Cmp. [Artigos] é numérico
+listagem["Úl.Pr.Cmp. [Artigos]"] = pd.to_numeric(
+    listagem["Úl.Pr.Cmp. [Artigos]"], errors="coerce"
+)
+
+# criar df POS nos mesmos moldes do R
+POS = listagem.assign(
+    **{
+        "Distributor SAP Acct #": 70465299,
+        "Customer Ship To Country": "PT",
+        "Customer Ship To Zip Code": listagem["Cód.Postal [Clientes]"],
+        "SAP Material Master No.": listagem["Abrev. [Artigos]"],
+        "ANSI Catalog No./Grade Item Number": "",
+        "Qty Sold": listagem["Quant [Documentos GC Lin]"],
+        "Invoice Date": listagem["Data"],
+        "Deal Registration ID": "",
+        "Total Distributor Cost": listagem["Úl.Pr.Cmp. [Artigos]"].round(2),
+    }
+)
+
+# remover linhas sem código postal
+POS = POS.dropna(subset=["Customer Ship To Zip Code"])
+
+st.write("### POS pronto")
+st.dataframe(POS)
+Se quiseres usar o POS_ABA.xls apenas como template (por exemplo, para garantir ordem de colunas), podes ler e depois substituir as colunas relevantes pelo POS criado acima, mas funcionalmente o R também ignora o conteúdo do ficheiro e só usa a listagem para construir o POS final.
+
+Acompanhamentos
+
+como salvar o df POS como arquivo excel
+
+adicione colunas calculadas no df POS usando assign
+
+faça merge do df POS com df_componentes_kits
+
+mostre df POS.head() e info() no streamlit
+
+exporte df POS para POS_ABA_processado.xls
